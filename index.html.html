@@ -1,0 +1,561 @@
+
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jaden Management System</title>
+<style>
+:root{--navy:#15365f;--blue:#245da8;--gold:#f4bd38;--bg:#f3f6fb;--green:#198754;--red:#c0392b}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:#243247}
+button,input,select{font:inherit;padding:10px;border:1px solid #ccd4df;border-radius:7px}
+button{background:var(--blue);color:white;border:0;cursor:pointer}
+button:hover{opacity:.9}
+input,select{width:100%;margin:5px 0 12px}
+label{font-weight:bold;font-size:14px}
+header{background:var(--navy);color:white;padding:17px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+header h2{margin:0}
+nav{display:flex;flex-wrap:wrap;gap:7px;padding:12px;background:white;box-shadow:0 2px 5px #ddd}
+nav button{background:#e8eef7;color:var(--navy)}
+nav button.active{background:var(--navy);color:white}
+main{padding:18px;max-width:1300px;margin:auto}
+.panel,.stat{background:white;border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 2px 8px #0000000a}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.stat strong{font-size:25px;color:var(--blue);display:block;margin-top:8px}
+table{border-collapse:collapse;width:100%;min-width:650px}
+th,td{padding:10px;border-bottom:1px solid #e2e7ef;text-align:left}
+th{background:#edf2f9}
+.tablewrap{overflow-x:auto}
+.hidden{display:none!important}
+.danger{background:var(--red)}
+.green{background:var(--green)}
+.gold{background:var(--gold);color:#222}
+.small{font-size:13px;color:#68778a}
+.notice{padding:12px;background:#fff4d2;border-radius:8px;margin-bottom:12px}
+@media(max-width:600px){main{padding:10px}header{padding:12px}.panel{padding:12px}}
+</style>
+</head>
+<body>
+
+<section id="loginPage" style="max-width:420px;margin:8vh auto;padding:20px">
+ <div class="panel">
+  <h1 style="color:#15365f">Jaden Management</h1>
+  <p>Ingia kwenye mfumo wa usimamizi wa shule.</p>
+  <form id="loginForm">
+   <label>Jina la mtumiaji</label>
+   <input id="loginUser" required placeholder="Username">
+   <label>Nenosiri</label>
+   <input id="loginPass" type="password" required placeholder="Password">
+   <button style="width:100%">Ingia</button>
+  </form>
+  <p id="loginError" style="color:red"></p>
+  <p class="small">Mwanzo: admin / Admin@123</p>
+ </div>
+</section>
+
+<div id="app" class="hidden">
+<header>
+ <div><h2>Jaden Management System</h2><small id="userInfo"></small></div>
+ <div style="min-width:180px">
+  <label>Shule inayotumika</label>
+  <select id="schoolSelect"></select>
+  <button id="logoutBtn" class="danger">Toka</button>
+ </div>
+</header>
+
+<nav id="navigation">
+ <button data-page="dashboard" class="active">Dashboard</button>
+ <button data-page="students">Wanafunzi</button>
+ <button data-page="payments">Malipo</button>
+ <button data-page="exams">Mitihani na Matokeo</button>
+ <button data-page="expenses">Matumizi</button>
+ <button data-page="reports">Ripoti</button>
+ <button data-page="users" id="usersTab">Watumiaji</button>
+</nav>
+
+<main>
+<section id="dashboard" class="page">
+ <h2>Dashboard</h2>
+ <div class="stats">
+  <div class="stat">Wanafunzi<strong id="totalStudents">0</strong></div>
+  <div class="stat">Mapato<strong id="totalIncome">TSh 0</strong></div>
+  <div class="stat">Matumizi<strong id="totalExpenses">TSh 0</strong></div>
+  <div class="stat">Salio<strong id="balance">TSh 0</strong></div>
+ </div>
+ <div class="panel">
+  <h3>Muhtasari wa shule</h3>
+  <p id="schoolSummary"></p>
+  <p class="small">Taarifa zinahifadhiwa kwenye browser hii kwa kutumia LocalStorage.</p>
+ </div>
+</section>
+
+<section id="students" class="page hidden">
+ <h2>Usajili wa Wanafunzi</h2>
+ <div class="panel">
+  <form id="studentForm">
+   <div class="grid">
+    <div><label>Namba ya usajili</label><input id="studentReg" placeholder="JAD-001" required></div>
+    <div><label>Jina kamili</label><input id="studentName" required></div>
+    <div><label>Darasa</label>
+     <select id="studentClass">
+      <option>PP1</option><option>PP2</option><option>PP3</option>
+      <option>Darasa la 1</option><option>Darasa la 2</option>
+      <option>Darasa la 3</option><option>Darasa la 4</option>
+      <option>Darasa la 5</option><option>Darasa la 6</option>
+      <option>Darasa la 7</option>
+     </select>
+    </div>
+    <div><label>Jinsia</label><select id="studentGender"><option>Me</option><option>Ke</option></select></div>
+    <div><label>Simu ya mzazi</label><input id="studentParent" placeholder="07XXXXXXXX"></div>
+    <div><label>Ada inayotakiwa (TSh)</label><input id="studentFee" type="number" min="0" value="0" required></div>
+   </div>
+   <button>Hifadhi mwanafunzi</button>
+  </form>
+ </div>
+ <div class="panel">
+  <label>Tafuta mwanafunzi</label><input id="studentSearch" placeholder="Tafuta kwa jina au namba...">
+  <div class="tablewrap"><table><thead><tr><th>Namba</th><th>Jina</th><th>Darasa</th><th>Jinsia</th><th>Ada</th><th>Hatua</th></tr></thead><tbody id="studentsTable"></tbody></table></div>
+ </div>
+</section>
+
+<section id="payments" class="page hidden">
+ <h2>Malipo ya Wanafunzi</h2>
+ <div class="notice">Chagua shule hapo juu. Orodha ya wanafunzi hapa chini itaonyesha wanafunzi waliosajiliwa kwenye shule hiyo pekee.</div>
+ <div class="panel">
+  <form id="paymentForm">
+   <div class="grid">
+    <div><label>Mwanafunzi wa shule hii</label><select id="payStudent" required></select></div>
+    <div><label>Aina ya malipo</label>
+     <select id="payType"><option value="Ada">Ada</option><option value="Mtihani">Mtihani</option><option value="Mahafali">Mahafali</option><option value="Dharura">Dharura</option><option value="Mchango">Mchango</option></select>
+    </div>
+    <div><label>Kiasi (TSh)</label><input id="payAmount" type="number" min="1" required></div>
+    <div><label>Tarehe</label><input id="payDate" type="date" required></div>
+    <div><label>Mwezi/kipindi</label><input id="payMonth" placeholder="Mfano: Januari 2027"></div>
+    <div><label>Jina la aliyelipa</label><input id="payerName" placeholder="Mzazi/mlezi"></div>
+    <div><label>Maelezo</label><input id="payNote" placeholder="Maelezo ya ziada"></div>
+   </div>
+   <button class="green">Hifadhi malipo</button>
+  </form>
+  <p id="studentBalanceInfo" class="small"></p>
+ </div>
+ <div class="panel">
+  <h3>Rekodi za malipo za shule hii</h3>
+  <div class="tablewrap"><table><thead><tr><th>Tarehe</th><th>Mwanafunzi</th><th>Aina</th><th>Kiasi</th><th>Aliyelipa</th><th>Hatua</th></tr></thead><tbody id="paymentsTable"></tbody></table></div>
+ </div>
+</section>
+
+<section id="exams" class="page hidden">
+ <h2>Mitihani na Matokeo</h2>
+ <div class="panel">
+  <form id="examForm">
+   <div class="grid">
+    <div><label>Mwanafunzi</label><select id="examStudent" required></select></div>
+    <div><label>Jina la mtihani</label><input id="examName" placeholder="Mfano: Mtihani wa Muhula" required></div>
+    <div><label>Somo</label><select id="examSubject"><option>Kusoma</option><option>Kuandika</option><option>Kuhesabu</option><option>Kiingereza</option><option>Michoro</option><option>Sayansi</option><option>Kiswahili</option></select></div>
+    <div><label>Alama</label><input id="examMarks" type="number" min="0" max="100" required></div>
+    <div><label>Tarehe</label><input id="examDate" type="date" required></div>
+   </div>
+   <button>Hifadhi matokeo</button>
+  </form>
+ </div>
+ <div class="panel"><div class="tablewrap"><table><thead><tr><th>Tarehe</th><th>Mwanafunzi</th><th>Mtihani</th><th>Somo</th><th>Alama</th><th>Daraja</th><th>Hatua</th></tr></thead><tbody id="examsTable"></tbody></table></div></div>
+</section>
+
+<section id="expenses" class="page hidden">
+ <h2>Matumizi ya Shule</h2>
+ <div class="panel">
+  <form id="expenseForm">
+   <div class="grid">
+    <div><label>Aina ya matumizi</label><select id="expenseType"><option>Mishahara</option><option>Chakula</option><option>Vifaa vya shule</option><option>Umeme/Maji</option><option>Usafiri</option><option>Matengenezo</option><option>Mengineyo</option></select></div>
+    <div><label>Kiasi (TSh)</label><input id="expenseAmount" type="number" min="1" required></div>
+    <div><label>Tarehe</label><input id="expenseDate" type="date" required></div>
+    <div><label>Maelezo</label><input id="expenseNote" required></div>
+   </div>
+   <button>Hifadhi matumizi</button>
+  </form>
+ </div>
+ <div class="panel"><div class="tablewrap"><table><thead><tr><th>Tarehe</th><th>Aina</th><th>Maelezo</th><th>Kiasi</th><th>Hatua</th></tr></thead><tbody id="expensesTable"></tbody></table></div></div>
+</section>
+
+<section id="reports" class="page hidden">
+ <h2>Ripoti za Shule</h2>
+ <div class="panel">
+  <h3>Muhtasari wa kifedha</h3>
+  <div id="financialReport"></div>
+  <button onclick="window.print()">Chapisha / Hifadhi PDF</button>
+  <button id="exportBtn" class="green">Pakua data za shule (JSON)</button>
+ </div>
+ <div class="panel">
+  <h3>Ripoti ya wanafunzi na matokeo</h3>
+  <div class="tablewrap"><table><thead><tr><th>Namba</th><th>Jina</th><th>Darasa</th><th>Jumla ya malipo</th><th>Salio la ada</th><th>Wastani wa alama</th></tr></thead><tbody id="studentReport"></tbody></table></div>
+ </div>
+</section>
+
+<section id="users" class="page hidden">
+ <h2>Usimamizi wa Watumiaji</h2>
+ <div class="notice">Sehemu hii inapatikana kwa Admin pekee. Fungua akaunti za watumiaji na uwape shule wanazoruhusiwa kusimamia.</div>
+ <div class="panel">
+  <form id="userForm">
+   <div class="grid">
+    <div><label>Username</label><input id="newUsername" required></div>
+    <div><label>Jina kamili</label><input id="newFullname" required></div>
+    <div><label>Nenosiri</label><input id="newPassword" required></div>
+    <div><label>Jukumu</label><select id="newRole"><option value="teacher">Mwalimu</option><option value="head">Mwalimu Mkuu</option><option value="admin">Admin</option></select></div>
+    <div><label>Shule anazoruhusiwa</label>
+     <select id="newSchool"><option value="jaden">Jaden School</option><option value="jadeng">Jaden G School</option><option value="both">Shule zote mbili</option></select>
+    </div>
+   </div>
+   <button>Fungua akaunti</button>
+  </form>
+ </div>
+ <div class="panel"><div class="tablewrap"><table><thead><tr><th>Username</th><th>Jina</th><th>Jukumu</th><th>Shule</th><th>Hatua</th></tr></thead><tbody id="usersTable"></tbody></table></div></div>
+</section>
+</main>
+</div>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+const SCHOOL_NAMES = {jaden:"Jaden School",jadeng:"Jaden G School"};
+const DBKEY = "jaden_management_single_file_v1";
+
+let db = JSON.parse(localStorage.getItem(DBKEY) || "null") || {
+ students:[], payments:[], exams:[], expenses:[],
+ users:[
+  {username:"admin",password:"Admin@123",fullname:"System Administrator",role:"admin",schools:["jaden","jadeng"]}
+ ]
+};
+let currentUser = null;
+let activeSchool = "jaden";
+
+function saveDB(){
+ localStorage.setItem(DBKEY,JSON.stringify(db));
+}
+function uid(){
+ return Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+}
+function money(n){
+ return "TSh "+Number(n||0).toLocaleString("en-US");
+}
+function esc(v){
+ return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function today(){
+ return new Date().toISOString().slice(0,10);
+}
+function isAdmin(){
+ return currentUser && currentUser.role==="admin";
+}
+function allowedSchools(){
+ return currentUser ? currentUser.schools : [];
+}
+function schoolStudents(){
+ return db.students.filter(s=>s.schoolId===activeSchool);
+}
+function schoolPayments(){
+ return db.payments.filter(p=>p.schoolId===activeSchool);
+}
+function schoolExams(){
+ return db.exams.filter(e=>e.schoolId===activeSchool);
+}
+function schoolExpenses(){
+ return db.expenses.filter(e=>e.schoolId===activeSchool);
+}
+function studentByKey(key){
+ return schoolStudents().find(s=>s.key===key);
+}
+function studentPaid(key){
+ return schoolPayments().filter(p=>p.studentKey===key && p.type==="Ada")
+  .reduce((sum,p)=>sum+Number(p.amount),0);
+}
+function grade(mark){
+ if(mark>=80)return "A";
+ if(mark>=65)return "B";
+ if(mark>=50)return "C";
+ if(mark>=35)return "D";
+ return "E";
+}
+function notify(message){
+ alert(message);
+}
+function setOptions(id,items,placeholder){
+ const select=$(id);
+ const oldValue=select.value;
+ select.innerHTML='<option value="">'+esc(placeholder||"Chagua")+'</option>'+
+ items.map(x=>'<option value="'+esc(x.key||x.id)+'">'+esc(x.name||x.label)+'</option>').join("");
+ if(items.some(x=>(x.key||x.id)===oldValue))select.value=oldValue;
+}
+function refreshStudentDropdowns(){
+ const students=schoolStudents().map(s=>({
+  key:s.key,
+  name:s.reg+" — "+s.name+" ("+s.className+")"
+ }));
+ setOptions("payStudent",students,"Chagua mwanafunzi wa "+SCHOOL_NAMES[activeSchool]);
+ setOptions("examStudent",students,"Chagua mwanafunzi");
+ updateStudentBalanceInfo();
+}
+function updateStudentBalanceInfo(){
+ const s=studentByKey($("payStudent").value);
+ if(!s){$("studentBalanceInfo").textContent="Chagua mwanafunzi ili kuona salio la ada.";return;}
+ const paid=studentPaid(s.key);
+ $("studentBalanceInfo").textContent="Ada inayotakiwa: "+money(s.fee)+
+  " | Ada iliyolipwa: "+money(paid)+" | Salio: "+money(Math.max(0,s.fee-paid));
+}
+function showPage(page){
+ document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
+ $(page).classList.remove("hidden");
+ document.querySelectorAll("#navigation button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+}
+function renderAll(){
+ if(!currentUser)return;
+ $("userInfo").textContent=currentUser.fullname+" ("+currentUser.role+")";
+ $("schoolSelect").innerHTML=allowedSchools().map(id=>'<option value="'+id+'">'+SCHOOL_NAMES[id]+'</option>').join("");
+ $("schoolSelect").value=activeSchool;
+ $("schoolSelect").disabled=allowedSchools().length===1;
+ $("usersTab").classList.toggle("hidden",!isAdmin());
+ renderDashboard();
+ renderStudents();
+ refreshStudentDropdowns();
+ renderPayments();
+ renderExams();
+ renderExpenses();
+ renderReports();
+ if(isAdmin())renderUsers();
+}
+function renderDashboard(){
+ const students=schoolStudents(),payments=schoolPayments(),expenses=schoolExpenses();
+ const income=payments.reduce((a,p)=>a+Number(p.amount),0);
+ const cost=expenses.reduce((a,e)=>a+Number(e.amount),0);
+ $("totalStudents").textContent=students.length;
+ $("totalIncome").textContent=money(income);
+ $("totalExpenses").textContent=money(cost);
+ $("balance").textContent=money(income-cost);
+ $("schoolSummary").textContent=SCHOOL_NAMES[activeSchool]+
+  ": wanafunzi "+students.length+", mapato "+money(income)+
+  ", matumizi "+money(cost)+", salio "+money(income-cost)+".";
+}
+function renderStudents(){
+ const query=$("studentSearch").value.toLowerCase();
+ $("studentsTable").innerHTML=schoolStudents().filter(s=>(s.name+" "+s.reg).toLowerCase().includes(query)).map(s=>
+ `<tr><td>${esc(s.reg)}</td><td>${esc(s.name)}</td><td>${esc(s.className)}</td><td>${esc(s.gender)}</td><td>${money(s.fee)}</td><td><button class="danger" data-delete-student="${esc(s.key)}">Futa</button></td></tr>`
+ ).join("")||'<tr><td colspan="6">Hakuna wanafunzi kwenye shule hii.</td></tr>';
+}
+function renderPayments(){
+ $("paymentsTable").innerHTML=schoolPayments().slice().reverse().map(p=>{
+  const s=schoolStudents().find(x=>x.key===p.studentKey);
+  return `<tr><td>${esc(p.date)}</td><td>${esc(s?s.name:"Mwanafunzi aliyefutwa")}</td><td>${esc(p.type)}</td><td>${money(p.amount)}</td><td>${esc(p.payer||"-")}</td><td><button class="danger" data-delete-payment="${esc(p.id)}">Futa</button></td></tr>`;
+ }).join("")||'<tr><td colspan="6">Hakuna malipo yaliyorekodiwa.</td></tr>';
+}
+function renderExams(){
+ $("examsTable").innerHTML=schoolExams().slice().reverse().map(e=>{
+  const s=schoolStudents().find(x=>x.key===e.studentKey);
+  return `<tr><td>${esc(e.date)}</td><td>${esc(s?s.name:"Mwanafunzi aliyefutwa")}</td><td>${esc(e.examName)}</td><td>${esc(e.subject)}</td><td>${e.marks}</td><td>${grade(e.marks)}</td><td><button class="danger" data-delete-exam="${esc(e.id)}">Futa</button></td></tr>`;
+ }).join("")||'<tr><td colspan="7">Hakuna matokeo yaliyorekodiwa.</td></tr>';
+}
+function renderExpenses(){
+ $("expensesTable").innerHTML=schoolExpenses().slice().reverse().map(e=>
+ `<tr><td>${esc(e.date)}</td><td>${esc(e.type)}</td><td>${esc(e.note)}</td><td>${money(e.amount)}</td><td><button class="danger" data-delete-expense="${esc(e.id)}">Futa</button></td></tr>`
+ ).join("")||'<tr><td colspan="5">Hakuna matumizi yaliyorekodiwa.</td></tr>';
+}
+function renderReports(){
+ const students=schoolStudents(),payments=schoolPayments(),expenses=schoolExpenses();
+ const income=payments.reduce((a,p)=>a+Number(p.amount),0);
+ const cost=expenses.reduce((a,e)=>a+Number(e.amount),0);
+ const byType={};
+ payments.forEach(p=>byType[p.type]=(byType[p.type]||0)+Number(p.amount));
+ $("financialReport").innerHTML=`
+ <p><b>Shule:</b> ${esc(SCHOOL_NAMES[activeSchool])}</p>
+ <p><b>Jumla ya mapato:</b> ${money(income)}</p>
+ <p><b>Jumla ya matumizi:</b> ${money(cost)}</p>
+ <p><b>Salio:</b> ${money(income-cost)}</p>
+ <h4>Mapato kwa aina</h4>
+ ${Object.keys(byType).map(k=>`<p>${esc(k)}: ${money(byType[k])}</p>`).join("")||"<p>Hakuna mapato.</p>"}`;
+ $("studentReport").innerHTML=students.map(s=>{
+  const paid=studentPaid(s.key);
+  const marks=schoolExams().filter(e=>e.studentKey===s.key);
+  const average=marks.length?(marks.reduce((a,e)=>a+Number(e.marks),0)/marks.length).toFixed(1):"-";
+  return `<tr><td>${esc(s.reg)}</td><td>${esc(s.name)}</td><td>${esc(s.className)}</td><td>${money(schoolPayments().filter(p=>p.studentKey===s.key).reduce((a,p)=>a+Number(p.amount),0))}</td><td>${money(Math.max(0,s.fee-paid))}</td><td>${average}</td></tr>`;
+ }).join("")||'<tr><td colspan="6">Hakuna wanafunzi.</td></tr>';
+}
+function renderUsers(){
+ if(!isAdmin())return;
+ $("usersTable").innerHTML=db.users.map(u=>{
+  const schoolText=u.schools.map(s=>SCHOOL_NAMES[s]).join(", ");
+  return `<tr><td>${esc(u.username)}</td><td>${esc(u.fullname)}</td><td>${esc(u.role)}</td><td>${esc(schoolText)}</td><td>${u.username==="admin"?"":`<button class="danger" data-delete-user="${esc(u.username)}">Futa</button>`}</td></tr>`;
+ }).join("");
+}
+function login(username,password){
+ const u=db.users.find(x=>x.username===username&&x.password===password);
+ if(!u)return false;
+ currentUser=u;
+ activeSchool=u.schools.includes("jaden")?"jaden":u.schools[0];
+ $("loginPage").classList.add("hidden");
+ $("app").classList.remove("hidden");
+ renderAll();
+ return true;
+}
+$("loginForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ if(!login($("loginUser").value.trim(),$("loginPass").value)){
+  $("loginError").textContent="Username au nenosiri si sahihi.";
+ }
+});
+$("logoutBtn").addEventListener("click",()=>{
+ currentUser=null;
+ $("app").classList.add("hidden");
+ $("loginPage").classList.remove("hidden");
+ $("loginPass").value="";
+});
+$("schoolSelect").addEventListener("change",()=>{
+ const chosen=$("schoolSelect").value;
+ if(!allowedSchools().includes(chosen))return;
+ activeSchool=chosen;
+ renderAll();
+});
+$("navigation").addEventListener("click",e=>{
+ const b=e.target.closest("button[data-page]");
+ if(!b)return;
+ if(b.dataset.page==="users"&&!isAdmin()){
+  notify("Huna ruhusa ya kuingia sehemu hii.");return;
+ }
+ showPage(b.dataset.page);
+});
+$("studentForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const reg=$("studentReg").value.trim();
+ const name=$("studentName").value.trim();
+ if(schoolStudents().some(s=>s.reg.toLowerCase()===reg.toLowerCase())){
+  notify("Namba hii ya usajili tayari ipo kwenye shule hii.");return;
+ }
+ db.students.push({
+  key:uid(),schoolId:activeSchool,reg,name,
+  className:$("studentClass").value,
+  gender:$("studentGender").value,
+  parent:$("studentParent").value.trim(),
+  fee:Number($("studentFee").value||0)
+ });
+ saveDB();e.target.reset();$("studentFee").value=0;
+ renderAll();notify("Mwanafunzi amehifadhiwa.");
+});
+$("studentSearch").addEventListener("input",renderStudents);
+
+/* MALIPO: dropdown value ni student.key; utafutaji pia unatumia key. */
+$("payStudent").addEventListener("change",updateStudentBalanceInfo);
+$("paymentForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const student=schoolStudents().find(s=>s.key===$("payStudent").value);
+ if(!student){
+  notify("Chagua mwanafunzi aliyesajiliwa kwenye shule inayotumika.");return;
+ }
+ const amount=Number($("payAmount").value);
+ if(!Number.isFinite(amount)||amount<=0){notify("Weka kiasi sahihi.");return;}
+ db.payments.push({
+  id:uid(),schoolId:activeSchool,studentKey:student.key,
+  type:$("payType").value,amount,
+  date:$("payDate").value||today(),
+  month:$("payMonth").value.trim(),
+  payer:$("payerName").value.trim(),
+  note:$("payNote").value.trim()
+ });
+ saveDB();e.target.reset();$("payDate").value=today();
+ renderAll();notify("Malipo yamehifadhiwa kwenye "+SCHOOL_NAMES[activeSchool]+".");
+});
+$("examForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const student=schoolStudents().find(s=>s.key===$("examStudent").value);
+ const marks=Number($("examMarks").value);
+ if(!student){notify("Chagua mwanafunzi wa shule hii.");return;}
+ if(marks<0||marks>100){notify("Alama lazima ziwe kati ya 0 na 100.");return;}
+ db.exams.push({
+  id:uid(),schoolId:activeSchool,studentKey:student.key,
+  examName:$("examName").value.trim(),subject:$("examSubject").value,
+  marks,date:$("examDate").value||today()
+ });
+ saveDB();e.target.reset();$("examDate").value=today();
+ renderAll();notify("Matokeo yamehifadhiwa.");
+});
+$("expenseForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const amount=Number($("expenseAmount").value);
+ if(amount<=0){notify("Weka kiasi sahihi.");return;}
+ db.expenses.push({
+  id:uid(),schoolId:activeSchool,type:$("expenseType").value,
+  amount,date:$("expenseDate").value||today(),
+  note:$("expenseNote").value.trim()
+ });
+ saveDB();e.target.reset();$("expenseDate").value=today();
+ renderAll();notify("Matumizi yamehifadhiwa.");
+});
+$("userForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ if(!isAdmin()){notify("Admin pekee anaweza kufungua akaunti.");return;}
+ const username=$("newUsername").value.trim();
+ if(db.users.some(u=>u.username===username)){
+  notify("Username hii tayari ipo.");return;
+ }
+ const school=$("newSchool").value;
+ db.users.push({
+  username,password:$("newPassword").value,
+  fullname:$("newFullname").value.trim(),
+  role:$("newRole").value,
+  schools:school==="both"?["jaden","jadeng"]:[school]
+ });
+ saveDB();e.target.reset();renderUsers();notify("Akaunti imefunguliwa.");
+});
+document.addEventListener("click",e=>{
+ const t=e.target;
+ if(t.dataset.deleteStudent){
+  if(!isAdmin()){notify("Admin pekee anaweza kufuta mwanafunzi.");return;}
+  const key=t.dataset.deleteStudent;
+  if(!confirm("Ufute mwanafunzi huyu? Rekodi zake za malipo na matokeo zitaendelea kubaki."))return;
+  db.students=db.students.filter(s=>!(s.key===key&&s.schoolId===activeSchool));
+  saveDB();renderAll();
+ }
+ if(t.dataset.deletePayment){
+  if(!isAdmin()){notify("Admin pekee anaweza kufuta rekodi za malipo.");return;}
+  if(!confirm("Una uhakika unataka kufuta malipo haya?"))return;
+  db.payments=db.payments.filter(p=>!(p.id===t.dataset.deletePayment&&p.schoolId===activeSchool));
+  saveDB();renderAll();
+ }
+ if(t.dataset.deleteExam){
+  if(!isAdmin()){notify("Admin pekee anaweza kufuta matokeo.");return;}
+  if(!confirm("Una uhakika unataka kufuta matokeo haya?"))return;
+  db.exams=db.exams.filter(x=>!(x.id===t.dataset.deleteExam&&x.schoolId===activeSchool));
+  saveDB();renderAll();
+ }
+ if(t.dataset.deleteExpense){
+  if(!isAdmin()){notify("Admin pekee anaweza kufuta matumizi.");return;}
+  if(!confirm("Una uhakika unataka kufuta matumizi haya?"))return;
+  db.expenses=db.expenses.filter(x=>!(x.id===t.dataset.deleteExpense&&x.schoolId===activeSchool));
+  saveDB();renderAll();
+ }
+ if(t.dataset.deleteUser){
+  if(!isAdmin()){notify("Admin pekee.");return;}
+  const username=t.dataset.deleteUser;
+  if(!confirm("Ufute akaunti ya "+username+"?"))return;
+  db.users=db.users.filter(u=>u.username!==username);
+  saveDB();renderUsers();
+ }
+});
+$("exportBtn").addEventListener("click",()=>{
+ const data={
+  school:SCHOOL_NAMES[activeSchool],
+  students:schoolStudents(),payments:schoolPayments(),
+  exams:schoolExams(),expenses:schoolExpenses()
+ };
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+ a.href=url;a.download=activeSchool+"-jaden-data.json";a.click();
+ URL.revokeObjectURL(url);
+});
+$("payDate").value=today();
+$("examDate").value=today();
+$("expenseDate").value=today();
+saveDB();
+</script>
+</body>
+</html>
