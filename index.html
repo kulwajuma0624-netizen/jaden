@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="sw">
 <head>
@@ -128,7 +127,7 @@ th{background:#edf2f9}
    <div class="grid">
     <div><label>Mwanafunzi wa shule hii</label><select id="payStudent" required></select></div>
     <div><label>Aina ya malipo</label>
-     <select id="payType"><option value="Ada">Ada</option><option value="Mtihani">Mtihani</option><option value="Mahafali">Mahafali</option><option value="Dharura">Dharura</option><option value="Mchango">Mchango</option></select>
+     <select id="payType"><option value="Ada">Ada</option><option value="Mtihani">Mtihani</option><option value="Mahafali">Mahafali</option><option value="Dharura">Dharura</option><option value="Mengine">Mengine</option></select>
     </div>
     <div><label>Kiasi (TSh)</label><input id="payAmount" type="number" min="1" required></div>
     <div><label>Tarehe</label><input id="payDate" type="date" required></div>
@@ -153,7 +152,7 @@ th{background:#edf2f9}
    <div class="grid">
     <div><label>Mwanafunzi</label><select id="examStudent" required></select></div>
     <div><label>Jina la mtihani</label><input id="examName" placeholder="Mfano: Mtihani wa Muhula" required></div>
-    <div><label>Somo</label><select id="examSubject"><option>Kusoma</option><option>Kuandika</option><option>Kuhesabu</option><option>Kiingereza</option><option>Michoro</option><option>Sayansi</option><option>Kiswahili</option></select></div>
+    <div><label>Somo</label><select id="examSubject"><option>Kusoma</option><option>Kuandika</option><option>Kuhesabu</option><option>Kiingereza</option><option>Michoro</option><option>Sayansi</option><option>Historia</option><option>Stadi za maisha</option></select></div>
     <div><label>Alama</label><input id="examMarks" type="number" min="0" max="100" required></div>
     <div><label>Tarehe</label><input id="examDate" type="date" required></div>
    </div>
@@ -168,7 +167,7 @@ th{background:#edf2f9}
  <div class="panel">
   <form id="expenseForm">
    <div class="grid">
-    <div><label>Aina ya matumizi</label><select id="expenseType"><option>Mishahara</option><option>Chakula</option><option>Vifaa vya shule</option><option>Umeme/Maji</option><option>Usafiri</option><option>Matengenezo</option><option>Mengineyo</option></select></div>
+    <div><label>Aina ya matumizi</label><select id="expenseType"><option>Mishahara</option><option>Chakula</option><option>Vifaa vya shule</option><option>Umeme/Maji</option><option>Usafiri</option><option>Mengine</option></select></div>
     <div><label>Kiasi (TSh)</label><input id="expenseAmount" type="number" min="1" required></div>
     <div><label>Tarehe</label><input id="expenseDate" type="date" required></div>
     <div><label>Maelezo</label><input id="expenseNote" required></div>
@@ -187,6 +186,26 @@ th{background:#edf2f9}
   <button onclick="window.print()">Chapisha / Hifadhi PDF</button>
   <button id="exportBtn" class="green">Pakua data za shule (JSON)</button>
  </div>
+
+ <div class="panel">
+  <h3>Ripoti ya mwanafunzi</h3>
+  <div class="grid">
+   <div>
+    <label>Mwanafunzi</label>
+    <select id="studentReportSelect"></select>
+   </div>
+  </div>
+  <div id="studentPerformanceSummary" class="notice" style="margin-top:12px">Chagua mwanafunzi ili kuona ripoti ya masomo, ufaulu, wastani na nafasi ya darasa.</div>
+  <div class="tablewrap">
+   <table>
+    <thead>
+     <tr><th>Somo</th><th>Wastani</th><th>Ufaulu</th><th>Wastani wa darasa</th></tr>
+    </thead>
+    <tbody id="studentSubjectReport"></tbody>
+   </table>
+  </div>
+ </div>
+
  <div class="panel">
   <h3>Ripoti ya wanafunzi na matokeo</h3>
   <div class="tablewrap"><table><thead><tr><th>Namba</th><th>Jina</th><th>Darasa</th><th>Jumla ya malipo</th><th>Salio la ada</th><th>Wastani wa alama</th></tr></thead><tbody id="studentReport"></tbody></table></div>
@@ -309,6 +328,46 @@ function showPage(page){
  $(page).classList.remove("hidden");
  document.querySelectorAll("#navigation button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
 }
+function renderStudentPerformanceReport(){
+ const select=$("studentReportSelect");
+ if(!select){return;}
+ const studentKey=select.value;
+ const student=schoolStudents().find(s=>s.key===studentKey);
+ if(!student){
+  $("studentSubjectReport").innerHTML='<tr><td colspan="4">Hakuna mwanafunzi aliyechaguliwa.</td></tr>';
+  $("studentPerformanceSummary").textContent="Chagua mwanafunzi ili kuona ripoti ya masomo, ufaulu, wastani na nafasi ya darasa.";
+  return;
+ }
+
+ const studentExams=schoolExams().filter(e=>e.studentKey===studentKey);
+ const subjectStats={};
+ studentExams.forEach(exam=>{
+  if(!subjectStats[exam.subject])subjectStats[exam.subject]={sum:0,count:0};
+  subjectStats[exam.subject].sum += Number(exam.marks);
+  subjectStats[exam.subject].count += 1;
+ });
+
+ const rows=Object.keys(subjectStats).map(subject=>{
+  const avg=subjectStats[subject].sum / subjectStats[subject].count;
+  const classAvg = schoolExams().filter(e=>e.subject===subject).reduce((total,e)=>total+Number(e.marks),0) /
+    (schoolExams().filter(e=>e.subject===subject).length || 1);
+  return `<tr><td>${esc(subject)}</td><td>${avg.toFixed(1)}</td><td>${grade(Math.round(avg))}</td><td>${classAvg.toFixed(1)}</td></tr>`;
+ }).join("");
+ $("studentSubjectReport").innerHTML = rows || '<tr><td colspan="4">Mwanafunzi hana matokeo ya masomo.</td></tr>';
+
+ const overallAvg=studentExams.length ? studentExams.reduce((sum,e)=>sum+Number(e.marks),0)/studentExams.length : 0;
+ const classRank = schoolStudents().map(s=>{
+  const marks = schoolExams().filter(e=>e.studentKey===s.key);
+  const avg = marks.length ? marks.reduce((sum,e)=>sum+Number(e.marks),0)/marks.length : 0;
+  return { key:s.key, avg };
+ }).sort((a,b)=>b.avg-a.avg);
+ const position = classRank.findIndex(item=>item.key===studentKey)+1 || classRank.length;
+ $("studentPerformanceSummary").innerHTML = `
+  <strong>${esc(student.name)}</strong> | Wastani wa jumla: <b>${overallAvg.toFixed(1)}</b> |
+  Ufaulu: <b>${grade(Math.round(overallAvg))}</b> |
+  Nafasi ya darasa: <b>${position}/${classRank.length || 1}</b>
+ `;
+}
 function renderAll(){
  if(!currentUser)return;
  $("userInfo").textContent=currentUser.fullname+" ("+currentUser.role+")";
@@ -367,18 +426,30 @@ function renderReports(){
  const byType={};
  payments.forEach(p=>byType[p.type]=(byType[p.type]||0)+Number(p.amount));
  $("financialReport").innerHTML=`
- <p><b>Shule:</b> ${esc(SCHOOL_NAMES[activeSchool])}</p>
- <p><b>Jumla ya mapato:</b> ${money(income)}</p>
- <p><b>Jumla ya matumizi:</b> ${money(cost)}</p>
- <p><b>Salio:</b> ${money(income-cost)}</p>
- <h4>Mapato kwa aina</h4>
- ${Object.keys(byType).map(k=>`<p>${esc(k)}: ${money(byType[k])}</p>`).join("")||"<p>Hakuna mapato.</p>"}`;
+  <p><b>Shule:</b> ${esc(SCHOOL_NAMES[activeSchool])}</p>
+  <p><b>Jumla ya mapato:</b> ${money(income)}</p>
+  <p><b>Jumla ya matumizi:</b> ${money(cost)}</p>
+  <p><b>Salio:</b> ${money(income-cost)}</p>
+  <h4>Mapato kwa aina</h4>
+  ${Object.keys(byType).map(k=>`<p>${esc(k)}: ${money(byType[k])}</p>`).join("")||"<p>Hakuna mapato.</p>"}`;
  $("studentReport").innerHTML=students.map(s=>{
   const paid=studentPaid(s.key);
   const marks=schoolExams().filter(e=>e.studentKey===s.key);
   const average=marks.length?(marks.reduce((a,e)=>a+Number(e.marks),0)/marks.length).toFixed(1):"-";
   return `<tr><td>${esc(s.reg)}</td><td>${esc(s.name)}</td><td>${esc(s.className)}</td><td>${money(schoolPayments().filter(p=>p.studentKey===s.key).reduce((a,p)=>a+Number(p.amount),0))}</td><td>${money(Math.max(0,s.fee-paid))}</td><td>${average}</td></tr>`;
  }).join("")||'<tr><td colspan="6">Hakuna wanafunzi.</td></tr>';
+
+ const studentSelect=$("studentReportSelect");
+ if(studentSelect){
+  const selectedValue=studentSelect.value;
+  studentSelect.innerHTML='<option value="">Chagua mwanafunzi</option>'+students.map(s=>`<option value="${esc(s.key)}">${esc(s.name)}</option>`).join("");
+  if(students.some(s=>s.key===selectedValue)){
+   studentSelect.value=selectedValue;
+  } else if(students[0]){
+   studentSelect.value=students[0].key;
+  }
+  renderStudentPerformanceReport();
+ }
 }
 function renderUsers(){
  if(!isAdmin())return;
@@ -552,6 +623,7 @@ $("exportBtn").addEventListener("click",()=>{
  a.href=url;a.download=activeSchool+"-jaden-data.json";a.click();
  URL.revokeObjectURL(url);
 });
+$("studentReportSelect").addEventListener("change",renderStudentPerformanceReport);
 $("payDate").value=today();
 $("examDate").value=today();
 $("expenseDate").value=today();
